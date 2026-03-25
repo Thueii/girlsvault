@@ -1,0 +1,10 @@
+{
+  "registryAddress": "0x45cA47427BAc65Ad1581486fd0B63278D596a850",
+  "projectAddress": "0xc136Af8f8B3c127769aa9658DB92d64C423f0f55",
+  "beneficiary": "0x7a692Af7d0A1Bbc1D9694793429edd0d73E1C27d",
+  "validators": [
+    "0x7a692Af7d0A1Bbc1D9694793429edd0d73E1C27d"
+  ],
+  "network": "fuji",
+  "setupAt": "2026-03-25T12:50:48.446Z"
+}

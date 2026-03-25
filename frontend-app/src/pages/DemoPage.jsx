@@ -206,7 +206,7 @@ export default function DemoPage({ onBack }) {
       const summary = await fetchProjectSummary(newAddr, signer);
       setAllProjects((prev) => [...prev, summary]);
       await loadProject(newAddr, signer);
-      addLog(`✅ 项目「${summary.name}」创建成功，目标金额 ${targetAmountEth} ETH`);
+      addLog(`✅ 项目「${summary.name}」创建成功，目标金额 ${targetAmountEth} AVAX`);
       setStep1Done(true);
       setAdminTab("milestone");
     } catch (e) {
@@ -249,7 +249,7 @@ export default function DemoPage({ onBack }) {
       const proj = new ethers.Contract(projectAddress, PROJECT_ABI, signer);
       const tx = await proj.donate(donateTag, { value: ethers.parseEther(donateAmount) });
       await tx.wait();
-      addLog(`✅ 感谢您的爱心！${donateAmount} ETH 已锁入合约，专项用于${TAG_DETAILS[donateTag].desc}`);
+      addLog(`✅ 感谢您的爱心！${donateAmount} AVAX 已锁入合约，专项用于${TAG_DETAILS[donateTag].desc}`);
       await refreshStatus(new ethers.Contract(projectAddress, PROJECT_ABI, signer));
     } catch (e) {
       if ((e.code === 4001 || (e.message || "").includes("ACTION_REJECTED"))) return setLoading("");
@@ -410,7 +410,7 @@ export default function DemoPage({ onBack }) {
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
                       <span style={{ color: "#9ca3af" }}>募集进度</span>
                       <span style={{ color: fundingDone ? "#10b981" : "#c4b5fd", fontWeight: 700 }}>
-                        {Number(status.totalDonated).toFixed(3)} / {Number(status.targetAmount).toFixed(1)} ETH
+                        {Number(status.totalDonated).toFixed(3)} / {Number(status.targetAmount).toFixed(1)} AVAX
                         {fundingDone && " ✓ 已达标"}
                       </span>
                     </div>
@@ -435,7 +435,7 @@ export default function DemoPage({ onBack }) {
                     {TAG_DETAILS.map((t, i) => Number(tagBalances[i]) > 0 && (
                       <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
                         <span style={{ color: "#9ca3af" }}>{t.icon} {t.name}</span>
-                        <span style={{ color: "#c4b5fd" }}>{Number(tagBalances[i]).toFixed(3)} ETH</span>
+                        <span style={{ color: "#c4b5fd" }}>{Number(tagBalances[i]).toFixed(3)} AVAX</span>
                       </div>
                     ))}
                   </div>
@@ -484,7 +484,7 @@ export default function DemoPage({ onBack }) {
                     </button>
                   ))}
                 </div>
-                <label style={s.label}>捐款金额（ETH）</label>
+                <label style={s.label}>捐款金额（AVAX）</label>
                 <input style={s.input} type="number" value={donateAmount} step="0.1" min="0.01"
                   onChange={(e) => setDonateAmount(e.target.value)} disabled={fundingDone} />
                 <button style={{ ...s.btn, background: fundingDone ? "#374151" : "#8b5cf6", opacity: loading === "donate" ? 0.6 : 1 }}
@@ -518,7 +518,7 @@ export default function DemoPage({ onBack }) {
                     </button>
                   ) : !fundingMetForMilestone ? (
                     <button style={{ ...s.btn, background: "#1f2937", color: "#6b7280", cursor: "not-allowed" }} disabled>
-                      募集未达标（需 {requiredFunding.toFixed(2)} ETH，当前 {Number(status.totalDonated || 0).toFixed(2)} ETH）
+                      募集未达标（需 {requiredFunding.toFixed(2)} AVAX，当前 {Number(status.totalDonated || 0).toFixed(2)} AVAX）
                     </button>
                   ) : (
                     <button style={{ ...s.btn, background: "#059669", opacity: loading === "proof" ? 0.6 : 1 }}
@@ -581,7 +581,7 @@ export default function DemoPage({ onBack }) {
                   <input style={s.input} value={newDesc} placeholder="简要描述项目内容和目标" onChange={(e) => setNewDesc(e.target.value)} />
                   <label style={s.label}>受益方地址</label>
                   <input style={s.input} value={beneficiaryAddr} onChange={(e) => setBeneficiaryAddr(e.target.value)} placeholder="0x..." />
-                  <label style={s.label}>募集目标金额（ETH）</label>
+                  <label style={s.label}>募集目标金额（AVAX）</label>
                   <input style={s.input} type="number" value={targetAmountEth} min="0.01" step="0.1" placeholder="例：2.0" onChange={(e) => setTargetAmountEth(e.target.value)} />
                 </div>
                 <div>
@@ -680,7 +680,7 @@ function WelcomeCard({ p, done }) {
       <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 14, lineHeight: 1.6, minHeight: 36 }}>{p.description}</div>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5 }}>
         <span style={{ color: "#9ca3af" }}>募集进度</span>
-        <span style={{ color: done ? "#10b981" : "#c4b5fd" }}>{Number(p.totalDonated).toFixed(2)} / {Number(p.targetAmount).toFixed(1)} ETH</span>
+        <span style={{ color: done ? "#10b981" : "#c4b5fd" }}>{Number(p.totalDonated).toFixed(2)} / {Number(p.targetAmount).toFixed(1)} AVAX</span>
       </div>
       <div style={s.progressBg}>
         <div style={{ ...s.progressFill, width: `${Math.min(p.progress, 100)}%` }} />
@@ -703,7 +703,7 @@ function StatBox({ label, value, color }) {
   return (
     <div style={{ textAlign: "center", flex: 1 }}>
       <div style={{ fontSize: 24, fontWeight: 800, color }}>{Number(value).toFixed(3)}</div>
-      <div style={{ fontSize: 11, color: "#6b7280" }}>ETH</div>
+      <div style={{ fontSize: 11, color: "#6b7280" }}>AVAX</div>
       <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 3 }}>{label}</div>
     </div>
   );

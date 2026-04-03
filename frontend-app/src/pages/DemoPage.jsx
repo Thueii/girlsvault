@@ -505,9 +505,10 @@ export default function DemoPage({ onBack }) {
       const proj = new ethers.Contract(projectAddress, PROJECT_ABI, signer);
       await (await proj.demoSkipEmergencyWindow()).wait();
       const projRead = new ethers.Contract(projectAddress, PROJECT_ABI, READ_PROVIDER);
+      const projSigned = new ethers.Contract(projectAddress, PROJECT_ABI, signer);
       await Promise.all([
         refreshStatus(projRead),
-        fetchEmergencyStatus(projRead, account),
+        fetchEmergencyStatus(projSigned, account),
       ]);
       showToast("✅ 已跳过 180 天限制，可发起紧急退款投票", "info");
     } catch (e) {
@@ -831,11 +832,13 @@ export default function DemoPage({ onBack }) {
     setRefreshing(true);
     await refreshStatus(project);
     if (account && project) {
+      // emergencyStatus 必须用 signer，否则 msg.sender=0，myDonation 始终为 0
+      const projWithSigner = signer ? new ethers.Contract(projectAddress, PROJECT_ABI, signer) : project;
       await Promise.all([
         fetchMyProofs(project, account),
         fetchValidatorStakeStatus(project, account),
-        fetchEmergencyStatus(new ethers.Contract(projectAddress, PROJECT_ABI, READ_PROVIDER), account),
-        fetchMyDonorBalance(new ethers.Contract(projectAddress, PROJECT_ABI, READ_PROVIDER), account),
+        fetchEmergencyStatus(projWithSigner, account),
+        fetchMyDonorBalance(project, account),
       ]);
     }
     setTimeout(() => setRefreshing(false), 800);

@@ -1254,7 +1254,7 @@ export default function DemoPage({ onBack }) {
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
                       <span style={{ color: "#9ca3af" }}>募集进度</span>
                       <span style={{ color: fundingDone ? "#10b981" : "#c4b5fd", fontWeight: 700 }}>
-                        {Number(status.totalDonated).toFixed(3)} / {Number(status.targetAmount).toFixed(5).replace(/\.?0+$/, "")} AVAX
+                        {Number(status.totalDonated).toFixed(6)} / {Number(status.targetAmount).toFixed(6).replace(/\.?0+$/, "")} AVAX
                         {fundingDone && " ✓ 已达标"}
                       </span>
                     </div>
@@ -1838,7 +1838,7 @@ function WelcomeCard({ p, done }) {
 function StatBox({ label, value, color }) {
   return (
     <div style={{ textAlign: "center", flex: 1 }}>
-      <div style={{ fontSize: 24, fontWeight: 800, color }}>{Number(value).toFixed(3)}</div>
+      <div style={{ fontSize: 24, fontWeight: 800, color }}>{Number(value).toFixed(6)}</div>
       <div style={{ fontSize: 11, color: "#6b7280" }}>AVAX</div>
       <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 3 }}>{label}</div>
     </div>

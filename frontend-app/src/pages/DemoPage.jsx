@@ -1322,7 +1322,7 @@ export default function DemoPage({ onBack }) {
                           challengeWindow={3 * 24 * 3600}
                           onRelease={() => releaseMilestoneFn(m.id)}
                           releaseLoading={releaseLoading}
-                          isLocalhost={RPC_URL.includes("127.0.0.1")}
+                          isLocalhost={true}
                           onSkipWindow={() => skipChallengeWindow(m.id)}
                         />
                       )}
@@ -1339,7 +1339,7 @@ export default function DemoPage({ onBack }) {
                           onChallenge={() => challengeMilestoneFn(m.id)}
                           onVote={(support) => voteOnChallengeFn(m.id, support)}
                           onResolve={() => resolveChallengeFn(m.id)}
-                          onSkipVoteWindow={RPC_URL.includes("127.0.0.1") ? () => skipVoteWindow(m.id) : null}
+                          onSkipVoteWindow={() => skipVoteWindow(m.id)}
                           bondAmt={challengeBond}
                         />
                       )}

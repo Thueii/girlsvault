@@ -1,0 +1,78 @@
+type Project @entity {
+  id: ID!                      # project contract address
+  address: String!
+  name: String!
+  creator: String!
+  createdAt: BigInt!
+  totalDonated: BigInt!
+  totalReleased: BigInt!
+  emergencyApproved: Boolean!
+  donations: [Donation!]! @derivedFrom(field: "project")
+  proofSubmissions: [ProofSubmission!]! @derivedFrom(field: "project")
+  fundReleases: [FundRelease!]! @derivedFrom(field: "project")
+  challenges: [Challenge!]! @derivedFrom(field: "project")
+  validatorStakes: [ValidatorStake!]! @derivedFrom(field: "project")
+}
+
+type Donation @entity {
+  id: ID!
+  project: Project!
+  donor: String!
+  amount: BigInt!
+  tag: Int!
+  timestamp: BigInt!
+  txHash: String!
+}
+
+type ProofSubmission @entity {
+  id: ID!
+  project: Project!
+  milestoneId: Int!
+  validator: String!
+  proofHash: Bytes!
+  proofUri: String!
+  timestamp: BigInt!
+  txHash: String!
+}
+
+type FundRelease @entity {
+  id: ID!
+  project: Project!
+  milestoneId: Int!
+  beneficiary: String!
+  amount: BigInt!
+  timestamp: BigInt!
+  txHash: String!
+}
+
+type Challenge @entity {
+  id: ID!                      # projectAddr-milestoneId
+  project: Project!
+  milestoneId: Int!
+  challenger: String!
+  evidenceCID: String!
+  challengedAt: BigInt!
+  forVotes: BigInt!
+  againstVotes: BigInt!
+  resolved: Boolean!
+  upheld: Boolean!
+  votes: [ChallengeVote!]! @derivedFrom(field: "challenge")
+}
+
+type ChallengeVote @entity {
+  id: ID!                      # txHash-logIndex
+  challenge: Challenge!
+  voter: String!
+  support: Boolean!
+  weight: BigInt!
+  timestamp: BigInt!
+}
+
+type ValidatorStake @entity {
+  id: ID!                      # projectAddr-validatorAddr
+  project: Project!
+  validator: String!
+  amount: BigInt!
+  slashed: Boolean!
+  timestamp: BigInt!
+}

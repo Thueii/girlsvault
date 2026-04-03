@@ -831,8 +831,12 @@ export default function DemoPage({ onBack }) {
     setRefreshing(true);
     await refreshStatus(project);
     if (account && project) {
-      await fetchMyProofs(project, account);
-      await fetchValidatorStakeStatus(project, account);
+      await Promise.all([
+        fetchMyProofs(project, account),
+        fetchValidatorStakeStatus(project, account),
+        fetchEmergencyStatus(new ethers.Contract(projectAddress, PROJECT_ABI, READ_PROVIDER), account),
+        fetchMyDonorBalance(new ethers.Contract(projectAddress, PROJECT_ABI, READ_PROVIDER), account),
+      ]);
     }
     setTimeout(() => setRefreshing(false), 800);
   };
@@ -1193,7 +1197,8 @@ export default function DemoPage({ onBack }) {
         <div style={s.body}>
           {/* 项目切换 */}
           {allProjects.length > 1 && (
-            <div style={s.projectSwitcher}>
+            <div style={{ ...s.projectSwitcher, justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", flex: 1 }}>
               {inProgress.length > 0 && (
                 <>
                   <span style={{ color: "#9ca3af", fontSize: 13, marginRight: 4 }}>进行中：</span>
@@ -1216,14 +1221,19 @@ export default function DemoPage({ onBack }) {
               )}
               {closed.length > 0 && (
                 <>
-                  <span style={{ color: "#f87171", fontSize: 13, marginLeft: 8, marginRight: 4 }}>已关闭：</span>
+                  <span style={{ color: "#4b5563", fontSize: 13, marginLeft: 8, marginRight: 4 }}>已关闭：</span>
                   {closed.map((p) => (
                     <button key={p.address}
-                      style={{ ...s.projectBtn, ...(p.address === projectAddress ? s.projectBtnActive : {}), borderColor: "#f87171", color: "#f87171", opacity: 0.7 }}
-                      onClick={() => loadProject(p.address, signer)}>⛔ {p.name}</button>
+                      style={{ ...s.projectBtn, ...(p.address === projectAddress ? s.projectBtnActive : {}), opacity: 0.6 }}
+                      onClick={() => loadProject(p.address, signer)}>{p.name}</button>
                   ))}
                 </>
               )}
+              </div>
+              <button onClick={handleRefresh} disabled={refreshing}
+                style={{ flexShrink: 0, fontSize: 12, background: "#1f2937", color: refreshing ? "#4b5563" : "#9ca3af", border: "1px solid #374151", borderRadius: 8, padding: "5px 14px", cursor: "pointer" }}>
+                {refreshing ? "刷新中..." : "↻ 刷新"}
+              </button>
             </div>
           )}
 

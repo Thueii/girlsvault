@@ -498,7 +498,11 @@ export default function DemoPage({ onBack }) {
     try {
       const proj = new ethers.Contract(projectAddress, PROJECT_ABI, signer);
       await (await proj.demoSkipEmergencyWindow()).wait();
-      await fetchEmergencyStatus(new ethers.Contract(projectAddress, PROJECT_ABI, READ_PROVIDER), account);
+      const projRead = new ethers.Contract(projectAddress, PROJECT_ABI, READ_PROVIDER);
+      await Promise.all([
+        refreshStatus(projRead),
+        fetchEmergencyStatus(projRead, account),
+      ]);
       showToast("✅ 已跳过 180 天限制，可发起紧急退款投票", "info");
     } catch (e) {
       showToast(e.message);
@@ -699,7 +703,8 @@ export default function DemoPage({ onBack }) {
     try {
       const proj = new ethers.Contract(projectAddress, PROJECT_ABI, signer);
       await (await proj.demoSkipVoteWindow(milestoneId)).wait();
-      await fetchChallengeInfos(new ethers.Contract(projectAddress, PROJECT_ABI, READ_PROVIDER), milestones);
+      const projRead = new ethers.Contract(projectAddress, PROJECT_ABI, READ_PROVIDER);
+      await refreshStatus(projRead);
       showToast("✅ 已跳过投票窗口", "info");
     } catch (e) {
       showToast(e.message);
@@ -991,8 +996,9 @@ export default function DemoPage({ onBack }) {
 
   const currentProject = allProjects.find(p => p.address?.toLowerCase() === projectAddress?.toLowerCase());
   const fundingDone = status.progress >= 100 || projectClosed;
-  const inProgress = allProjects.filter(p => !p.isCompleted).slice().reverse();
-  const completed = allProjects.filter(p => p.isCompleted).slice().reverse();
+  const closed = allProjects.filter(p => p.emergencyApproved).slice().reverse();
+  const inProgress = allProjects.filter(p => !p.isCompleted && !p.emergencyApproved).slice().reverse();
+  const completed = allProjects.filter(p => p.isCompleted && !p.emergencyApproved).slice().reverse();
 
   // 当前选中里程碑的状态
   const selectedMilestone = milestones.find(m => m.id === proofMilestone);
@@ -1185,10 +1191,8 @@ export default function DemoPage({ onBack }) {
                   <span style={{ color: "#9ca3af", fontSize: 13, marginRight: 4 }}>进行中：</span>
                   {inProgress.map((p) => (
                     <button key={p.address}
-                      style={{ ...s.projectBtn, ...(p.address === projectAddress ? s.projectBtnActive : {}), ...(p.emergencyApproved ? { borderColor: "#f87171", color: "#f87171" } : {}) }}
-                      onClick={() => loadProject(p.address, signer)}>
-                      {p.emergencyApproved ? "⛔ " : ""}{p.name}
-                    </button>
+                      style={{ ...s.projectBtn, ...(p.address === projectAddress ? s.projectBtnActive : {}) }}
+                      onClick={() => loadProject(p.address, signer)}>{p.name}</button>
                   ))}
                 </>
               )}
@@ -1199,6 +1203,16 @@ export default function DemoPage({ onBack }) {
                     <button key={p.address}
                       style={{ ...s.projectBtn, ...(p.address === projectAddress ? s.projectBtnActive : {}), opacity: 0.6 }}
                       onClick={() => loadProject(p.address, signer)}>{p.name}</button>
+                  ))}
+                </>
+              )}
+              {closed.length > 0 && (
+                <>
+                  <span style={{ color: "#f87171", fontSize: 13, marginLeft: 8, marginRight: 4 }}>已关闭：</span>
+                  {closed.map((p) => (
+                    <button key={p.address}
+                      style={{ ...s.projectBtn, ...(p.address === projectAddress ? s.projectBtnActive : {}), borderColor: "#f87171", color: "#f87171", opacity: 0.7 }}
+                      onClick={() => loadProject(p.address, signer)}>⛔ {p.name}</button>
                   ))}
                 </>
               )}

@@ -142,6 +142,40 @@ function ProofCard({ detail, index }) {
   );
 }
 
+// ── Mock 进行中项目（仅前端展示，不上链）────────────────────
+const MOCK_IN_PROGRESS = [
+  {
+    address: "mock-ip-1", name: "云南女童教育项目",
+    description: "为云南偏远地区女童提供餐食与教育资助，覆盖200名在校女童",
+    totalDonated: "6.5", targetAmount: "10.0", progress: 65, isCompleted: false,
+    milestones: [
+      { id: 0, desc: "女童入学注册确认", status: 2 },
+      { id: 1, desc: "学期中期物资发放确认", status: 1 },
+      { id: 2, desc: "学期结束出勤确认", status: 0 },
+    ],
+  },
+  {
+    address: "mock-ip-2", name: "四川山区助学计划",
+    description: "资助四川凉山贫困山区儿童的基础教育，提供课本、校服及营养午餐",
+    totalDonated: "3.2", targetAmount: "5.0", progress: 64, isCompleted: false,
+    milestones: [
+      { id: 0, desc: "学生入学资格核实", status: 2 },
+      { id: 1, desc: "教学物资发放到位", status: 0 },
+      { id: 2, desc: "期末考核完成确认", status: 0 },
+    ],
+  },
+  {
+    address: "mock-ip-3", name: "贵州女童健康守护",
+    description: "为贵州农村女童提供基础医疗检查、卫生用品及健康教育，覆盖3个村庄",
+    totalDonated: "2.1", targetAmount: "8.0", progress: 26, isCompleted: false,
+    milestones: [
+      { id: 0, desc: "体检及健康档案建立", status: 1 },
+      { id: 1, desc: "卫生用品及药品发放", status: 0 },
+      { id: 2, desc: "健康知识培训完成", status: 0 },
+    ],
+  },
+];
+
 // ── Mock 已完成项目（仅前端展示，不上链）────────────────────
 const MOCK_COMPLETED = [
   {
@@ -272,7 +306,37 @@ export default function DemoPage({ onBack }) {
 
   const addLog = (msg) => setLog((prev) => [...prev, { msg, time: new Date().toLocaleTimeString() }]);
 
-  useEffect(() => { loadProjectsReadOnly(); }, []);
+  useEffect(() => {
+    loadProjectsReadOnly();
+
+    // 监听 MetaMask 账户切换
+    if (window.ethereum) {
+      const handleAccountsChanged = (accounts) => {
+        if (accounts.length === 0) {
+          setAccount(""); setSigner(null);
+        } else {
+          // 账号变了，重新走连接流程
+          (async () => {
+            try {
+              const { ethers: e } = await import("ethers");
+              const provider = new e.BrowserProvider(window.ethereum);
+              const s = await provider.getSigner();
+              const addr = await s.getAddress();
+              setSigner(s);
+              setAccount(addr);
+              setBeneficiaryAddr(addr);
+              const list = await fetchAllProjects(s);
+              setAllProjects(list);
+              if (list.length > 0) await loadProject(list[list.length - 1].address, s);
+              fetchMySBTs(addr, new e.Contract(REGISTRY_ADDRESS, REGISTRY_ABI, s));
+            } catch {}
+          })();
+        }
+      };
+      window.ethereum.on("accountsChanged", handleAccountsChanged);
+      return () => window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
+    }
+  }, []);
 
   const loadProjectsReadOnly = async () => {
     try {
@@ -295,19 +359,6 @@ export default function DemoPage({ onBack }) {
   const connectWallet = async () => {
     try {
       const provider = await getProvider();
-
-      // 监听 MetaMask 账户切换，自动重新登录
-      if (window.ethereum) {
-        window.ethereum.removeAllListeners("accountsChanged");
-        window.ethereum.on("accountsChanged", (accounts) => {
-          if (accounts.length === 0) {
-            disconnectWallet();
-          } else {
-            connectWallet();
-          }
-        });
-      }
-
       const s = await provider.getSigner();
       const addr = await s.getAddress();
       setSigner(s);
@@ -1097,10 +1148,10 @@ export default function DemoPage({ onBack }) {
             </div>
           )}
 
-          {inProgress.length > 0 && (
+          {(inProgress.length > 0 || MOCK_IN_PROGRESS.length > 0) && (
             <div style={s.welcomeSection}>
               <div style={s.welcomeSectionTitle}>🌱 正在进行的项目</div>
-              <AutoScrollRow items={inProgress} renderItem={(p, i) => <WelcomeCard key={i} p={p} />} />
+              <AutoScrollRow items={[...inProgress, ...MOCK_IN_PROGRESS]} renderItem={(p, i) => <WelcomeCard key={i} p={p} />} />
             </div>
           )}
 

@@ -5,7 +5,7 @@ schema:
 dataSources:
   - kind: ethereum
     name: GirlsVaultRegistry
-    network: avalanche-fuji
+    network: fuji
     source:
       address: "0xa37d64AB68f42DEEA2BD7C3B5fBAe775E3a0bE5e"  # 部署后由 setup.js 自动替换
       abi: GirlsVaultRegistry
@@ -29,7 +29,7 @@ dataSources:
 templates:
   - kind: ethereum
     name: GirlsVaultProject
-    network: avalanche-fuji
+    network: fuji
     source:
       abi: GirlsVaultProject
     mapping:

@@ -1,4 +1,4 @@
-type Project @entity {
+type Project @entity(immutable: false) {
   id: ID!                      # project contract address
   address: String!
   name: String!
@@ -14,7 +14,7 @@ type Project @entity {
   validatorStakes: [ValidatorStake!]! @derivedFrom(field: "project")
 }
 
-type Donation @entity {
+type Donation @entity(immutable: true) {
   id: ID!
   project: Project!
   donor: String!
@@ -24,7 +24,7 @@ type Donation @entity {
   txHash: String!
 }
 
-type ProofSubmission @entity {
+type ProofSubmission @entity(immutable: true) {
   id: ID!
   project: Project!
   milestoneId: Int!
@@ -35,7 +35,7 @@ type ProofSubmission @entity {
   txHash: String!
 }
 
-type FundRelease @entity {
+type FundRelease @entity(immutable: true) {
   id: ID!
   project: Project!
   milestoneId: Int!
@@ -45,7 +45,7 @@ type FundRelease @entity {
   txHash: String!
 }
 
-type Challenge @entity {
+type Challenge @entity(immutable: false) {
   id: ID!                      # projectAddr-milestoneId
   project: Project!
   milestoneId: Int!
@@ -59,7 +59,7 @@ type Challenge @entity {
   votes: [ChallengeVote!]! @derivedFrom(field: "challenge")
 }
 
-type ChallengeVote @entity {
+type ChallengeVote @entity(immutable: true) {
   id: ID!                      # txHash-logIndex
   challenge: Challenge!
   voter: String!
@@ -68,7 +68,7 @@ type ChallengeVote @entity {
   timestamp: BigInt!
 }
 
-type ValidatorStake @entity {
+type ValidatorStake @entity(immutable: false) {
   id: ID!                      # projectAddr-validatorAddr
   project: Project!
   validator: String!

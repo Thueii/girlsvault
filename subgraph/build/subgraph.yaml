@@ -4,11 +4,11 @@ schema:
 dataSources:
   - kind: ethereum
     name: GirlsVaultRegistry
-    network: avalanche-fuji
+    network: fuji
     source:
-      address: "0x0000000000000000000000000000000000000001"
+      address: "0xa37d64AB68f42DEEA2BD7C3B5fBAe775E3a0bE5e"
       abi: GirlsVaultRegistry
-      startBlock: 0
+      startBlock: 53570185
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -17,9 +17,9 @@ dataSources:
         - Project
       abis:
         - name: GirlsVaultRegistry
-          file: GirlsVaultRegistry/abis/GirlsVaultRegistry.json
+          file: GirlsVaultRegistry/GirlsVaultRegistry.json
         - name: GirlsVaultProject
-          file: GirlsVaultRegistry/abis/GirlsVaultProject.json
+          file: GirlsVaultRegistry/GirlsVaultProject.json
       eventHandlers:
         - event: ProjectCreated(indexed address,string,indexed address)
           handler: handleProjectCreated
@@ -27,7 +27,7 @@ dataSources:
 templates:
   - kind: ethereum
     name: GirlsVaultProject
-    network: avalanche-fuji
+    network: fuji
     source:
       abi: GirlsVaultProject
     mapping:
@@ -44,7 +44,7 @@ templates:
         - ValidatorStake
       abis:
         - name: GirlsVaultProject
-          file: GirlsVaultProject/abis/GirlsVaultProject.json
+          file: GirlsVaultProject/GirlsVaultProject.json
       eventHandlers:
         - event: Donated(indexed address,uint256,uint8)
           handler: handleDonated

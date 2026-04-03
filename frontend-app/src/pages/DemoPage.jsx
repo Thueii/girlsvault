@@ -338,11 +338,17 @@ export default function DemoPage({ onBack }) {
     }
   }, []);
 
+  // 默认选最新的进行中项目，没有则选最新的
+  const pickDefaultProject = (list) => {
+    const active = list.filter(p => !p.isCompleted && !p.emergencyApproved);
+    return active.length > 0 ? active[active.length - 1].address : list[list.length - 1].address;
+  };
+
   const loadProjectsReadOnly = async () => {
     try {
       const list = await fetchAllProjects(READ_PROVIDER);
       setAllProjects(list);
-      if (list.length > 0) await loadProject(list[list.length - 1].address, null);
+      if (list.length > 0) await loadProject(pickDefaultProject(list), null);
       // 计算全局统计数据
       try {
         const reg = new ethers.Contract(REGISTRY_ADDRESS, REGISTRY_ABI, READ_PROVIDER);
@@ -369,7 +375,7 @@ export default function DemoPage({ onBack }) {
       setAllProjects(list);
 
       if (list.length > 0) {
-        await loadProject(list[list.length - 1].address, s);
+        await loadProject(pickDefaultProject(list), s);
       } else {
         showToast("暂无项目，请点击左下角「项目发起」创建", "info");
         setAdminOpen(true);
@@ -754,6 +760,8 @@ export default function DemoPage({ onBack }) {
     const provider = s || READ_PROVIDER;
     const proj = new ethers.Contract(addr, PROJECT_ABI, provider);
     setProjectAddress(addr);
+    setProjectClosed(false); // 重置，避免上一个项目的状态残留
+    setEmergency(null);
     setProject(proj);
     const [name, desc, bene, reqSigs, owner, bond] = await Promise.all([
       proj.name(), proj.description(), proj.beneficiary(), proj.requiredSignatures(), proj.projectOwner(),

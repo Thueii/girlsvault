@@ -7,9 +7,9 @@ dataSources:
     name: GirlsVaultRegistry
     network: fuji
     source:
-      address: "0xa37d64AB68f42DEEA2BD7C3B5fBAe775E3a0bE5e"  # 部署后由 setup.js 自动替换
+      address: "0x69143B1a53d239628821D2F9b5eF66e07c161eA6"  # 部署后由 setup.js 自动替换
       abi: GirlsVaultRegistry
-      startBlock: 53570185  # 部署后由 setup.js 自动替换
+      startBlock: 53571645  # 部署后由 setup.js 自动替换
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

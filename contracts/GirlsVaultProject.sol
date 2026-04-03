@@ -455,6 +455,11 @@ contract GirlsVaultProject {
         c.challengedAt = block.timestamp - VOTE_WINDOW - 1;
     }
 
+    /// @notice 演示用：跳过180天无活动限制，立即可发起紧急退款投票（任何人可调用）
+    function demoSkipEmergencyWindow() external {
+        lastActivityAt = block.timestamp - EMERGENCY_THRESHOLD - 1;
+    }
+
     /// @notice 争议窗口结束后（或争议驳回后）任何人可调用，正式释放资金给受益方
     function releaseMilestone(uint256 _milestoneId) external nonReentrant {
         if (_milestoneId >= milestones.length) revert InvalidMilestone();

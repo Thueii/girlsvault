@@ -79,6 +79,7 @@ export const PROJECT_ABI = [
   "function getEmergencyStatus() view returns (bool canVote, uint256 daysRemaining, uint256 votePercent, bool approved, uint256 myDonation)",
   "function demoSkipChallengeWindow(uint256)",
   "function demoSkipVoteWindow(uint256)",
+  "function demoSkipEmergencyWindow()",
   "event Donated(address indexed donor, uint256 amount, uint8 tag)",
   "event MilestoneVerified(uint256 indexed milestoneId)",
   "event EmergencyVoted(address indexed donor, uint256 amount, uint256 totalVotes)",

@@ -428,14 +428,14 @@ export default function DemoPage({ onBack }) {
     }
   };
 
-  // 仅本地 demo 用：快进时间 180 天触发紧急退款条件
+  // 演示用：跳过180天无活动限制
   const mockEmergencyTime = async () => {
+    if (!signer) return showToast("请先连接钱包");
     try {
-      await READ_PROVIDER.send("evm_increaseTime", [180 * 24 * 60 * 60 + 1]);
-      await READ_PROVIDER.send("evm_mine", []);
-      const proj = new ethers.Contract(projectAddress, PROJECT_ABI, READ_PROVIDER);
-      await fetchEmergencyStatus(proj, account);
-      showToast("✅ 已模拟跳过 180 天", "info");
+      const proj = new ethers.Contract(projectAddress, PROJECT_ABI, signer);
+      await (await proj.demoSkipEmergencyWindow()).wait();
+      await fetchEmergencyStatus(new ethers.Contract(projectAddress, PROJECT_ABI, READ_PROVIDER), account);
+      showToast("✅ 已跳过 180 天限制，可发起紧急退款投票", "info");
     } catch (e) {
       showToast(e.message);
     }
@@ -1190,7 +1190,7 @@ export default function DemoPage({ onBack }) {
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
                       <span style={{ color: "#9ca3af" }}>募集进度</span>
                       <span style={{ color: fundingDone ? "#10b981" : "#c4b5fd", fontWeight: 700 }}>
-                        {Number(status.totalDonated).toFixed(3)} / {Number(status.targetAmount).toFixed(1)} AVAX
+                        {Number(status.totalDonated).toFixed(3)} / {Number(status.targetAmount).toFixed(5).replace(/\.?0+$/, "")} AVAX
                         {fundingDone && " ✓ 已达标"}
                       </span>
                     </div>
@@ -1434,12 +1434,10 @@ export default function DemoPage({ onBack }) {
                   ) : (
                     <div style={{ fontSize: 12, color: "#4b5563" }}>
                       🔒 保护机制监控中 · 距离可投票还有 <span style={{ color: "#6b7280" }}>{emergency.daysRemaining} 天</span>（180天无活动触发）
-                      {RPC_URL.includes("127.0.0.1") && (
-                        <button onClick={mockEmergencyTime}
-                          style={{ display: "block", marginTop: 8, fontSize: 11, background: "#1f2937", color: "#6b7280", border: "1px dashed #374151", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
-                          🧪 [本地演示] 跳过 180 天
-                        </button>
-                      )}
+                      <button onClick={mockEmergencyTime}
+                        style={{ display: "block", marginTop: 8, fontSize: 11, background: "#1f2937", color: "#6b7280", border: "1px dashed #374151", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}>
+                        🧪 跳过 180 天限制
+                      </button>
                     </div>
                   )}
                 </div>

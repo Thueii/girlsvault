@@ -295,6 +295,19 @@ export default function DemoPage({ onBack }) {
   const connectWallet = async () => {
     try {
       const provider = await getProvider();
+
+      // 监听 MetaMask 账户切换，自动重新登录
+      if (window.ethereum) {
+        window.ethereum.removeAllListeners("accountsChanged");
+        window.ethereum.on("accountsChanged", (accounts) => {
+          if (accounts.length === 0) {
+            disconnectWallet();
+          } else {
+            connectWallet();
+          }
+        });
+      }
+
       const s = await provider.getSigner();
       const addr = await s.getAddress();
       setSigner(s);

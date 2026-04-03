@@ -726,8 +726,9 @@ export default function DemoPage({ onBack }) {
         addLog(`✅ M${milestoneId} 挑战成立，项目已关闭，可领取退款`);
         showToast("⚠️ 举报成立！项目关闭，请前往领取退款", "warn");
       } else {
-        addLog(`✅ M${milestoneId} 挑战已驳回`);
-        showToast("✅ 举报驳回，里程碑可正常释放", "info");
+        addLog(`✅ M${milestoneId} 挑战已驳回，自动释放资金`);
+        // 举报驳回 → 自动释放资金，无需手动点击
+        await releaseMilestoneFn(milestoneId);
       }
     } catch (e) {
       if (e.code === 4001 || (e.message || "").includes("ACTION_REJECTED")) { setChallengeLoading(""); return; }

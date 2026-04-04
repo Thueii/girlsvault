@@ -52,6 +52,8 @@ function buildNotif(eventName, log, projectName, blockTimestamps) {
         : { ...base, icon: "☑️", msg: `举报不成立，里程碑资金将正常释放`, level: "success" };
     case "FundsReleased":
       return { ...base, icon: "💸", msg: `里程碑 #${Number(log.args[0]) + 1} 资金已释放到受益方`, level: "info" };
+    case "EmergencyVoted":
+      return { ...base, icon: "🗳️", msg: `有捐款人发起了紧急退款投票，超过 50% 将自动退款`, level: "warn" };
     case "EmergencyRefundApproved":
       return { ...base, icon: "🆘", msg: `紧急退款已批准，可前往领取退款`, level: "error" };
     default:
@@ -64,6 +66,7 @@ const EVENT_NAMES = [
   "MilestoneChallenged",
   "ChallengeResolved",
   "FundsReleased",
+  "EmergencyVoted",
   "EmergencyRefundApproved",
 ];
 
@@ -108,10 +111,20 @@ export async function fetchNotifications(provider, projectMap, lastSeenBlock, re
     } catch {}
   }));
 
-  const all = allLogs
+  const raw = allLogs
     .map(({ log, addr, ev }) => buildNotif(ev, log, projectMap[addr], blockTimestamps))
     .filter(Boolean)
     .sort((a, b) => b.blockNumber - a.blockNumber);
+
+  // EmergencyVoted 每次投票都触发，同一项目只保留最新一条避免刷屏
+  const seen = new Set();
+  const all = raw.filter(n => {
+    if (n.type !== "EmergencyVoted") return true;
+    const key = `EmergencyVoted-${n.projectName}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
   // 未读 = 区块号比上次整体已读新 且 没有被单独标记已读
   const unread = all.filter(n => n.blockNumber > lastSeenBlock && !readIds.has(n.id));

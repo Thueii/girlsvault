@@ -17,9 +17,9 @@ dataSources:
         - Project
       abis:
         - name: GirlsVaultRegistry
-          file: GirlsVaultRegistry/GirlsVaultRegistry.json
+          file: GirlsVaultRegistry/abis/GirlsVaultRegistry.json
         - name: GirlsVaultProject
-          file: GirlsVaultRegistry/GirlsVaultProject.json
+          file: GirlsVaultRegistry/abis/GirlsVaultProject.json
       eventHandlers:
         - event: ProjectCreated(indexed address,string,indexed address)
           handler: handleProjectCreated
@@ -42,9 +42,10 @@ templates:
         - Challenge
         - ChallengeVote
         - ValidatorStake
+        - ProjectEvent
       abis:
         - name: GirlsVaultProject
-          file: GirlsVaultProject/GirlsVaultProject.json
+          file: GirlsVaultProject/abis/GirlsVaultProject.json
       eventHandlers:
         - event: Donated(indexed address,uint256,uint8)
           handler: handleDonated
@@ -64,6 +65,8 @@ templates:
           handler: handleValidatorStaked
         - event: ValidatorSlashed(indexed address,uint256)
           handler: handleValidatorSlashed
+        - event: EmergencyVoted(indexed address,uint256,uint256)
+          handler: handleEmergencyVoted
         - event: EmergencyRefundApproved()
           handler: handleEmergencyRefundApproved
       file: templates/GirlsVaultProject/GirlsVaultProject.wasm

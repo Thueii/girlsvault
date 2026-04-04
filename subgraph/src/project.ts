@@ -8,10 +8,11 @@ import {
   ChallengeResolved,
   ValidatorStaked,
   ValidatorSlashed,
+  EmergencyVoted,
   EmergencyRefundApproved,
 } from "../generated/templates/GirlsVaultProject/GirlsVaultProject";
-import { Project, Donation, ProofSubmission, FundRelease, Challenge, ChallengeVote, ValidatorStake } from "../generated/schema";
-import { BigInt } from "@graphprotocol/graph-ts";
+import { Project, Donation, ProofSubmission, FundRelease, Challenge, ChallengeVote, ValidatorStake, ProjectEvent } from "../generated/schema";
+import { BigInt, ethereum } from "@graphprotocol/graph-ts";
 
 // ── 工具函数 ─────────────────────────────────────────────
 
@@ -21,6 +22,24 @@ function challengeId(projectAddr: string, milestoneId: i32): string {
 
 function validatorStakeId(projectAddr: string, validator: string): string {
   return projectAddr + "-" + validator;
+}
+
+function saveProjectEvent(
+  event: ethereum.Event,
+  eventType: string,
+  milestoneId: i32,
+  upheld: boolean
+): void {
+  let id = event.transaction.hash.toHexString() + "-" + event.logIndex.toString();
+  let pe = new ProjectEvent(id);
+  pe.project = event.address.toHexString();
+  pe.eventType = eventType;
+  pe.milestoneId = milestoneId;
+  pe.upheld = upheld;
+  pe.timestamp = event.block.timestamp;
+  pe.blockNumber = event.block.number;
+  pe.txHash = event.transaction.hash.toHexString();
+  pe.save();
 }
 
 // ── 捐款 ─────────────────────────────────────────────────
@@ -61,8 +80,8 @@ export function handleProofSubmitted(event: ProofSubmitted): void {
 
 // ── 里程碑验证通过 ─────────────────────────────────────
 
-export function handleMilestoneVerified(_event: MilestoneVerified): void {
-  // 里程碑状态变化已可从 ProofSubmission 事件推算，此处仅作扩展预留
+export function handleMilestoneVerified(event: MilestoneVerified): void {
+  saveProjectEvent(event, "MilestoneVerified", event.params.milestoneId.toI32(), false);
 }
 
 // ── 资金释放 ───────────────────────────────────────────
@@ -84,6 +103,8 @@ export function handleFundsReleased(event: FundsReleased): void {
     project.totalReleased = project.totalReleased.plus(event.params.amount);
     project.save();
   }
+
+  saveProjectEvent(event, "FundsReleased", event.params.milestoneId.toI32(), false);
 }
 
 // ── 举报提交 ───────────────────────────────────────────
@@ -101,6 +122,8 @@ export function handleMilestoneChallenged(event: MilestoneChallenged): void {
   challenge.resolved = false;
   challenge.upheld = false;
   challenge.save();
+
+  saveProjectEvent(event, "MilestoneChallenged", event.params.milestoneId.toI32(), false);
 }
 
 // ── 举报投票 ───────────────────────────────────────────
@@ -138,6 +161,8 @@ export function handleChallengeResolved(event: ChallengeResolved): void {
     challenge.upheld = event.params.upheld;
     challenge.save();
   }
+
+  saveProjectEvent(event, "ChallengeResolved", event.params.milestoneId.toI32(), event.params.upheld);
 }
 
 // ── 验证人质押 ─────────────────────────────────────────
@@ -168,6 +193,12 @@ export function handleValidatorSlashed(event: ValidatorSlashed): void {
   }
 }
 
+// ── 紧急退款投票 ───────────────────────────────────────
+
+export function handleEmergencyVoted(event: EmergencyVoted): void {
+  saveProjectEvent(event, "EmergencyVoted", -1, false);
+}
+
 // ── 紧急退款批准 ───────────────────────────────────────
 
 export function handleEmergencyRefundApproved(event: EmergencyRefundApproved): void {
@@ -176,4 +207,6 @@ export function handleEmergencyRefundApproved(event: EmergencyRefundApproved): v
     project.emergencyApproved = true;
     project.save();
   }
+
+  saveProjectEvent(event, "EmergencyRefundApproved", -1, false);
 }

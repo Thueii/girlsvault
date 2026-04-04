@@ -76,3 +76,15 @@ type ValidatorStake @entity(immutable: false) {
   slashed: Boolean!
   timestamp: BigInt!
 }
+
+# 通知用：所有对捐款人/参与者有意义的项目事件
+type ProjectEvent @entity(immutable: true) {
+  id: ID!                      # txHash-logIndex
+  project: Project!
+  eventType: String!           # MilestoneVerified / MilestoneChallenged / ChallengeResolved / FundsReleased / EmergencyVoted / EmergencyRefundApproved
+  milestoneId: Int!            # 里程碑序号，无关事件填 -1
+  upheld: Boolean!             # 仅 ChallengeResolved 有意义：举报是否成立
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  txHash: String!
+}

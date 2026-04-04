@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { PROJECT_ABI } from "./contracts";
+import { isGraphAvailable, fetchNotificationsFromGraph } from "./graphQueries";
 
 // localStorage: 按区块号记录整体已读位置（全部已读用）
 const lsBlockKey = (acc) => `gv_notif_block_${acc.toLowerCase()}`;
@@ -72,15 +73,25 @@ const EVENT_NAMES = [
 
 /**
  * 扫描用户参与项目的事件，返回通知列表
+ * 优先走 The Graph（无 RPC 限制），不可用时降级为 queryFilter
  * @param {ethers.Provider} provider
  * @param {Object} projectMap  { addr: projectName }
- * @param {number} lastSeenBlock  上次已读区块号（0 = 首次，扫最近 50000 块）
+ * @param {number} lastSeenBlock  上次已读区块号（0 = 首次，扫最近 maxInitRange 块）
  * @param {Set<string>} readIds  已单独标记已读的通知 id 集合
  * @returns {Promise<{all: Notif[], unread: Notif[], currentBlock: number}>}
  */
 export async function fetchNotifications(provider, projectMap, lastSeenBlock, readIds = new Set(), maxInitRange = 50000) {
   const addrs = Object.keys(projectMap);
   if (!addrs.length) return { all: [], unread: [], currentBlock: 0 };
+
+  // ── 优先走 The Graph ───────────────────────────────────
+  if (isGraphAvailable()) {
+    try {
+      return await fetchNotificationsFromGraph(projectMap, lastSeenBlock, readIds);
+    } catch (e) {
+      console.warn("Graph query failed, falling back to RPC:", e);
+    }
+  }
 
   const currentBlock = await provider.getBlockNumber();
   const scanFrom = lastSeenBlock > 0

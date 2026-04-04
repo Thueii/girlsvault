@@ -78,14 +78,14 @@ const EVENT_NAMES = [
  * @param {Set<string>} readIds  已单独标记已读的通知 id 集合
  * @returns {Promise<{all: Notif[], unread: Notif[], currentBlock: number}>}
  */
-export async function fetchNotifications(provider, projectMap, lastSeenBlock, readIds = new Set()) {
+export async function fetchNotifications(provider, projectMap, lastSeenBlock, readIds = new Set(), maxInitRange = 50000) {
   const addrs = Object.keys(projectMap);
   if (!addrs.length) return { all: [], unread: [], currentBlock: 0 };
 
   const currentBlock = await provider.getBlockNumber();
   const scanFrom = lastSeenBlock > 0
     ? lastSeenBlock + 1
-    : Math.max(0, currentBlock - 50000);
+    : Math.max(0, currentBlock - maxInitRange);
 
   const allLogs = [];
 

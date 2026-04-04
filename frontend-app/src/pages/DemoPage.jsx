@@ -556,7 +556,9 @@ export default function DemoPage({ onBack }) {
 
       const lastSeen = getLastSeenBlock(acc);
       const readIds = getReadIds(acc);
-      const { all, unread, currentBlock } = await fetchNotifications(READ_PROVIDER, projectMap, lastSeen, readIds);
+      // Fuji RPC 限制 eth_getLogs 最多 2048 块；本地 Hardhat 无限制
+      const maxRange = IS_FUJI ? 2000 : 50000;
+      const { all, unread, currentBlock } = await fetchNotifications(READ_PROVIDER, projectMap, lastSeen, readIds, maxRange);
       setNotifications(all);
       setNotifUnread(unread.length);
       setNotifCurrentBlock(currentBlock);

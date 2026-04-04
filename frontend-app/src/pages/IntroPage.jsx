@@ -301,6 +301,122 @@ export default function IntroPage({ onEnterDemo }) {
         </div>
       </section>
 
+      {/* ─── 架构图 ─────────────────────────────────────────── */}
+      <section style={{ ...s.section, background: "rgba(167,139,250,0.03)", borderTop: "1px solid rgba(167,139,250,0.1)", borderBottom: "1px solid rgba(167,139,250,0.1)" }}>
+        <div style={s.sectionInner}>
+          <SectionLabel>系统架构</SectionLabel>
+          <h2 style={s.h2}>Architecture Overview</h2>
+          <p style={{ color: "#9ca3af", textAlign: "center", marginBottom: 40, fontSize: 15 }}>
+            各层组件协作流程：前端 → 钱包签名 → 链上合约 → 索引层 → 存储层
+          </p>
+
+          {/* 架构图容器 */}
+          <div style={{ maxWidth: 800, margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
+
+            {/* 第一层：用户 */}
+            <div style={archS.row}>
+              {[
+                { icon: "👩", label: "捐款人", color: "#f9a8d4" },
+                { icon: "🔍", label: "验证人", color: "#86efac" },
+                { icon: "🏫", label: "受益方", color: "#67e8f9" },
+              ].map(u => (
+                <div key={u.label} style={{ ...archS.userBox, borderColor: u.color + "55", color: u.color }}>
+                  <span style={{ fontSize: 20 }}>{u.icon}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{u.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <ArchArrow label="MetaMask / Core Wallet 签名" />
+
+            {/* 第二层：前端 */}
+            <div style={{ ...archS.layerBox, borderColor: "#a78bfa55", background: "rgba(167,139,250,0.06)" }}>
+              <div style={{ ...archS.layerTitle, color: "#a78bfa" }}>🖥️ 前端应用</div>
+              <div style={archS.chips}>
+                {["React 19 + Vite", "ethers.js v6", "Multicall3", "Pinata SDK"].map(t => (
+                  <span key={t} style={{ ...archS.chip, background: "rgba(167,139,250,0.12)", color: "#c4b5fd" }}>{t}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* 三叉箭头区 */}
+            <div style={{ display: "flex", width: "100%", alignItems: "flex-start", justifyContent: "center", gap: 0, marginTop: 0 }}>
+              <div style={archS.branchLine}>
+                <div style={archS.branchArrow}>合约调用</div>
+              </div>
+              <div style={archS.branchLine}>
+                <div style={archS.branchArrow}>GraphQL</div>
+              </div>
+              <div style={archS.branchLine}>
+                <div style={archS.branchArrow}>IPFS Upload</div>
+              </div>
+            </div>
+
+            {/* 第三层：三列基础设施 */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, width: "100%", marginTop: 4 }}>
+
+              {/* Avalanche */}
+              <div style={{ ...archS.layerBox, borderColor: "#f87171aa", background: "rgba(239,68,68,0.06)" }}>
+                <div style={{ ...archS.layerTitle, color: "#f87171" }}>🔴 Avalanche Fuji C-Chain</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
+                  {[
+                    { name: "Registry", desc: "项目注册 / SBT授权" },
+                    { name: "Project", desc: "捐款·验证·投票·退款" },
+                    { name: "SBT", desc: "灵魂绑定凭证" },
+                  ].map(c => (
+                    <div key={c.name} style={archS.contractRow}>
+                      <span style={{ color: "#fca5a5", fontWeight: 700, fontSize: 12 }}>{c.name}</span>
+                      <span style={{ color: "#6b7280", fontSize: 11 }}>{c.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* The Graph */}
+              <div style={{ ...archS.layerBox, borderColor: "#86efac88", background: "rgba(134,239,172,0.06)" }}>
+                <div style={{ ...archS.layerTitle, color: "#86efac" }}>📊 The Graph</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5, marginTop: 8 }}>
+                  {["ProjectEvent", "Donation", "Challenge", "FundRelease", "ValidatorStake"].map(e => (
+                    <div key={e} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#86efac", flexShrink: 0 }} />
+                      <span style={{ color: "#a7f3d0", fontSize: 11 }}>{e}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* IPFS */}
+              <div style={{ ...archS.layerBox, borderColor: "#67e8f988", background: "rgba(103,232,249,0.06)" }}>
+                <div style={{ ...archS.layerTitle, color: "#67e8f9" }}>📦 IPFS / Pinata</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5, marginTop: 8 }}>
+                  {["里程碑证明文件", "图片 / 视频", "验证报告", "CID → 链上存储"].map(e => (
+                    <div key={e} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#67e8f9", flexShrink: 0 }} />
+                      <span style={{ color: "#a5f3fc", fontSize: 11 }}>{e}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 说明 */}
+            <div style={{ marginTop: 28, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12 }}>
+              {[
+                { color: "#f87171", label: "链上不可篡改" },
+                { color: "#86efac", label: "全量历史索引" },
+                { color: "#67e8f9", label: "去中心化存储" },
+                { color: "#a78bfa", label: "开源前端" },
+              ].map(t => (
+                <div key={t.label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#9ca3af" }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: t.color }} />
+                  {t.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ─── 信任模型 ───────────────────────────────────────── */}
       <section style={s.section}>
         <div style={s.sectionInner}>
@@ -379,6 +495,83 @@ function TechRow({ label, value }) {
     </div>
   );
 }
+
+function ArchArrow({ label }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, margin: "6px 0" }}>
+      <div style={{ width: 1, height: 18, background: "rgba(167,139,250,0.4)" }} />
+      <span style={{ fontSize: 11, color: "#6b7280", background: "#09090f", padding: "1px 8px", border: "1px solid rgba(167,139,250,0.2)", borderRadius: 10 }}>{label}</span>
+      <div style={{ width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid rgba(167,139,250,0.4)" }} />
+    </div>
+  );
+}
+
+const archS = {
+  row: {
+    display: "flex",
+    gap: 12,
+    justifyContent: "center",
+    width: "100%",
+    marginBottom: 0,
+  },
+  userBox: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 4,
+    padding: "10px 20px",
+    border: "1px solid",
+    borderRadius: 10,
+    background: "rgba(255,255,255,0.03)",
+    minWidth: 80,
+  },
+  layerBox: {
+    width: "100%",
+    border: "1px solid",
+    borderRadius: 12,
+    padding: "14px 18px",
+  },
+  layerTitle: {
+    fontWeight: 700,
+    fontSize: 13,
+    letterSpacing: "0.03em",
+  },
+  chips: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 10,
+  },
+  chip: {
+    padding: "3px 10px",
+    borderRadius: 20,
+    fontSize: 12,
+  },
+  branchLine: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    padding: "6px 0",
+  },
+  branchArrow: {
+    fontSize: 10,
+    color: "#4b5563",
+    background: "#09090f",
+    padding: "2px 8px",
+    border: "1px solid rgba(255,255,255,0.07)",
+    borderRadius: 10,
+    whiteSpace: "nowrap",
+  },
+  contractRow: {
+    display: "flex",
+    flexDirection: "column",
+    padding: "5px 8px",
+    background: "rgba(239,68,68,0.06)",
+    borderRadius: 6,
+    border: "1px solid rgba(239,68,68,0.12)",
+  },
+};
 
 const s = {
   page: {

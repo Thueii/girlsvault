@@ -307,113 +307,9 @@ export default function IntroPage({ onEnterDemo }) {
           <SectionLabel>系统架构</SectionLabel>
           <h2 style={s.h2}>Architecture Overview</h2>
           <p style={{ color: "#9ca3af", textAlign: "center", marginBottom: 40, fontSize: 15 }}>
-            各层组件协作流程：前端 → 钱包签名 → 链上合约 → 索引层 → 存储层
+            各层组件协作流程：用户 → 钱包签名 → 前端 → 链上合约 / 索引 / 存储
           </p>
-
-          {/* 架构图容器 */}
-          <div style={{ maxWidth: 800, margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
-
-            {/* 第一层：用户 */}
-            <div style={archS.row}>
-              {[
-                { icon: "👩", label: "捐款人", color: "#f9a8d4" },
-                { icon: "🔍", label: "验证人", color: "#86efac" },
-                { icon: "🏫", label: "受益方", color: "#67e8f9" },
-              ].map(u => (
-                <div key={u.label} style={{ ...archS.userBox, borderColor: u.color + "55", color: u.color }}>
-                  <span style={{ fontSize: 20 }}>{u.icon}</span>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>{u.label}</span>
-                </div>
-              ))}
-            </div>
-
-            <ArchArrow label="MetaMask / Core Wallet 签名" />
-
-            {/* 第二层：前端 */}
-            <div style={{ ...archS.layerBox, borderColor: "#a78bfa55", background: "rgba(167,139,250,0.06)" }}>
-              <div style={{ ...archS.layerTitle, color: "#a78bfa" }}>🖥️ 前端应用</div>
-              <div style={archS.chips}>
-                {["React 19 + Vite", "ethers.js v6", "Multicall3", "Pinata SDK"].map(t => (
-                  <span key={t} style={{ ...archS.chip, background: "rgba(167,139,250,0.12)", color: "#c4b5fd" }}>{t}</span>
-                ))}
-              </div>
-            </div>
-
-            {/* 三叉箭头区 */}
-            <div style={{ display: "flex", width: "100%", alignItems: "flex-start", justifyContent: "center", gap: 0, marginTop: 0 }}>
-              <div style={archS.branchLine}>
-                <div style={archS.branchArrow}>合约调用</div>
-              </div>
-              <div style={archS.branchLine}>
-                <div style={archS.branchArrow}>GraphQL</div>
-              </div>
-              <div style={archS.branchLine}>
-                <div style={archS.branchArrow}>IPFS Upload</div>
-              </div>
-            </div>
-
-            {/* 第三层：三列基础设施 */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, width: "100%", marginTop: 4 }}>
-
-              {/* Avalanche */}
-              <div style={{ ...archS.layerBox, borderColor: "#f87171aa", background: "rgba(239,68,68,0.06)" }}>
-                <div style={{ ...archS.layerTitle, color: "#f87171" }}>🔴 Avalanche Fuji C-Chain</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
-                  {[
-                    { name: "Registry", desc: "项目注册 / SBT授权" },
-                    { name: "Project", desc: "捐款·验证·投票·退款" },
-                    { name: "SBT", desc: "灵魂绑定凭证" },
-                  ].map(c => (
-                    <div key={c.name} style={archS.contractRow}>
-                      <span style={{ color: "#fca5a5", fontWeight: 700, fontSize: 12 }}>{c.name}</span>
-                      <span style={{ color: "#6b7280", fontSize: 11 }}>{c.desc}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* The Graph */}
-              <div style={{ ...archS.layerBox, borderColor: "#86efac88", background: "rgba(134,239,172,0.06)" }}>
-                <div style={{ ...archS.layerTitle, color: "#86efac" }}>📊 The Graph</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 5, marginTop: 8 }}>
-                  {["ProjectEvent", "Donation", "Challenge", "FundRelease", "ValidatorStake"].map(e => (
-                    <div key={e} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#86efac", flexShrink: 0 }} />
-                      <span style={{ color: "#a7f3d0", fontSize: 11 }}>{e}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* IPFS */}
-              <div style={{ ...archS.layerBox, borderColor: "#67e8f988", background: "rgba(103,232,249,0.06)" }}>
-                <div style={{ ...archS.layerTitle, color: "#67e8f9" }}>📦 IPFS / Pinata</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 5, marginTop: 8 }}>
-                  {["里程碑证明文件", "图片 / 视频", "验证报告", "CID → 链上存储"].map(e => (
-                    <div key={e} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#67e8f9", flexShrink: 0 }} />
-                      <span style={{ color: "#a5f3fc", fontSize: 11 }}>{e}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* 说明 */}
-            <div style={{ marginTop: 28, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 12 }}>
-              {[
-                { color: "#f87171", label: "链上不可篡改" },
-                { color: "#86efac", label: "全量历史索引" },
-                { color: "#67e8f9", label: "去中心化存储" },
-                { color: "#a78bfa", label: "开源前端" },
-              ].map(t => (
-                <div key={t.label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#9ca3af" }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: t.color }} />
-                  {t.label}
-                </div>
-              ))}
-            </div>
-          </div>
+          <ArchDiagram />
         </div>
       </section>
 
@@ -496,82 +392,113 @@ function TechRow({ label, value }) {
   );
 }
 
-function ArchArrow({ label }) {
+function ArchDiagram() {
+  const ARR = "url(#marr)", ARR_R = "url(#marr-r)", ARR_G = "url(#marr-g)", ARR_C = "url(#marr-c)";
+  const contracts = [
+    ["GirlsVaultRegistry", "项目注册 · SBT 授权"],
+    ["GirlsVaultProject",  "捐款 · 验证 · 投票 · 退款"],
+    ["GirlsVaultSBT",      "灵魂绑定凭证（不可转让）"],
+  ];
+  const graphEntities = ["ProjectEvent", "Donation", "Challenge", "FundRelease", "ValidatorStake"];
+  const ipfsItems = ["证明文件（图片 / 视频）", "里程碑验证报告", "元数据 JSON", "CID → 链上永久存证"];
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, margin: "6px 0" }}>
-      <div style={{ width: 1, height: 18, background: "rgba(167,139,250,0.4)" }} />
-      <span style={{ fontSize: 11, color: "#6b7280", background: "#09090f", padding: "1px 8px", border: "1px solid rgba(167,139,250,0.2)", borderRadius: 10 }}>{label}</span>
-      <div style={{ width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid rgba(167,139,250,0.4)" }} />
-    </div>
+    <svg viewBox="0 0 760 465" style={{ width: "100%", maxWidth: 760, margin: "0 auto", display: "block" }}>
+      <defs>
+        <marker id="marr"   markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#4b5563"/></marker>
+        <marker id="marr-r" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#ef4444"/></marker>
+        <marker id="marr-g" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#22c55e"/></marker>
+        <marker id="marr-c" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#06b6d4"/></marker>
+      </defs>
+
+      {/* ── 用户层 ── */}
+      <rect x="30"  y="10" width="205" height="68" rx="10" fill="#1a0e2e" stroke="#7c3aed" strokeWidth="1.5"/>
+      <text x="133" y="42" textAnchor="middle" fontSize="22">👩</text>
+      <text x="133" y="64" textAnchor="middle" fill="#c4b5fd" fontSize="12" fontWeight="700">捐款人 / Donor</text>
+
+      <rect x="277" y="10" width="206" height="68" rx="10" fill="#0a1f12" stroke="#22c55e" strokeWidth="1.5"/>
+      <text x="380" y="42" textAnchor="middle" fontSize="22">🔍</text>
+      <text x="380" y="64" textAnchor="middle" fill="#86efac" fontSize="12" fontWeight="700">验证人 / Validator</text>
+
+      <rect x="525" y="10" width="205" height="68" rx="10" fill="#071c22" stroke="#06b6d4" strokeWidth="1.5"/>
+      <text x="628" y="42" textAnchor="middle" fontSize="22">🏫</text>
+      <text x="628" y="64" textAnchor="middle" fill="#67e8f9" fontSize="12" fontWeight="700">受益方 / Beneficiary</text>
+
+      {/* 收敛箭头 → 前端 */}
+      <line x1="133" y1="78" x2="372" y2="122" stroke="#4b5563" strokeWidth="1.2" markerEnd={ARR}/>
+      <line x1="380" y1="78" x2="380" y2="122" stroke="#4b5563" strokeWidth="1.2" markerEnd={ARR}/>
+      <line x1="628" y1="78" x2="388" y2="122" stroke="#4b5563" strokeWidth="1.2" markerEnd={ARR}/>
+      <rect x="268" y="84" width="224" height="20" rx="10" fill="#111827" stroke="#374151" strokeWidth="1"/>
+      <text x="380" y="98" textAnchor="middle" fill="#9ca3af" fontSize="11">🦊 MetaMask / Core Wallet</text>
+
+      {/* ── 前端层 ── */}
+      <rect x="30" y="130" width="700" height="68" rx="12" fill="#0f0e2a" stroke="#4338ca" strokeWidth="1.5"/>
+      <text x="380" y="153" textAnchor="middle" fill="#a5b4fc" fontSize="13" fontWeight="700">🖥️ 前端应用</text>
+      <text x="380" y="172" textAnchor="middle" fill="#6b7280" fontSize="11">React 19 + Vite · ethers.js v6 · Multicall3 · Pinata SDK</text>
+      <text x="380" y="188" textAnchor="middle" fill="#374151" fontSize="10">Vercel CI/CD 部署 · localStorage 通知已读状态</text>
+
+      {/* 分叉箭头 → 三列 */}
+      <line x1="137" y1="198" x2="137" y2="242" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="5,3" markerEnd={ARR_R}/>
+      <rect x="80"  y="210" width="114" height="18" rx="9" fill="#1f0808"/>
+      <text x="137" y="223" textAnchor="middle" fill="#ef4444" fontSize="10">合约调用 / RPC</text>
+
+      <line x1="380" y1="198" x2="380" y2="242" stroke="#22c55e" strokeWidth="1.5" strokeDasharray="5,3" markerEnd={ARR_G}/>
+      <rect x="318" y="210" width="124" height="18" rx="9" fill="#071510"/>
+      <text x="380" y="223" textAnchor="middle" fill="#22c55e" fontSize="10">GraphQL 查询</text>
+
+      <line x1="623" y1="198" x2="623" y2="242" stroke="#06b6d4" strokeWidth="1.5" strokeDasharray="5,3" markerEnd={ARR_C}/>
+      <rect x="561" y="210" width="124" height="18" rx="9" fill="#051520"/>
+      <text x="623" y="223" textAnchor="middle" fill="#06b6d4" fontSize="10">IPFS 文件上传</text>
+
+      {/* ── Avalanche ── */}
+      <rect x="30" y="250" width="214" height="200" rx="12" fill="#150505" stroke="#ef4444" strokeWidth="1.5"/>
+      <text x="137" y="273" textAnchor="middle" fill="#f87171" fontSize="12" fontWeight="700">🔴 Avalanche Fuji</text>
+      <text x="137" y="289" textAnchor="middle" fill="#4b5563" fontSize="10">C-Chain · 智能合约层</text>
+      {contracts.map(([name, desc], i) => (
+        <g key={name}>
+          <rect x="44" y={300 + i * 46} width="186" height="38" rx="7" fill="#1f0808" stroke="#7f1d1d" strokeWidth="1"/>
+          <text x="137" y={316 + i * 46} textAnchor="middle" fill="#fca5a5" fontSize="11" fontWeight="600">{name}</text>
+          <text x="137" y={330 + i * 46} textAnchor="middle" fill="#6b7280" fontSize="10">{desc}</text>
+        </g>
+      ))}
+
+      {/* ── The Graph ── */}
+      <rect x="273" y="250" width="214" height="200" rx="12" fill="#030f08" stroke="#22c55e" strokeWidth="1.5"/>
+      <text x="380" y="273" textAnchor="middle" fill="#86efac" fontSize="12" fontWeight="700">📊 The Graph</text>
+      <text x="380" y="289" textAnchor="middle" fill="#4b5563" fontSize="10">链上事件索引 · GraphQL API</text>
+      {graphEntities.map((e, i) => (
+        <g key={e}>
+          <circle cx="291" cy={308 + i * 30} r="3.5" fill="#22c55e"/>
+          <text x="302" y={313 + i * 30} fill="#6ee7b7" fontSize="11">{e}</text>
+        </g>
+      ))}
+
+      {/* ── IPFS ── */}
+      <rect x="516" y="250" width="214" height="200" rx="12" fill="#030c14" stroke="#06b6d4" strokeWidth="1.5"/>
+      <text x="623" y="273" textAnchor="middle" fill="#67e8f9" fontSize="12" fontWeight="700">📦 IPFS / Pinata</text>
+      <text x="623" y="289" textAnchor="middle" fill="#4b5563" fontSize="10">去中心化文件存储</text>
+      {ipfsItems.map((e, i) => (
+        <g key={e}>
+          <circle cx="533" cy={308 + i * 36} r="3.5" fill="#06b6d4"/>
+          <text x="544" y={313 + i * 36} fill="#a5f3fc" fontSize="11">{e}</text>
+        </g>
+      ))}
+
+      {/* ── 图例 ── */}
+      {[
+        [137, "#ef4444", "链上不可篡改"],
+        [300, "#22c55e", "全量历史索引"],
+        [470, "#06b6d4", "去中心化存储"],
+        [630, "#a78bfa", "开源前端"],
+      ].map(([x, color, label]) => (
+        <g key={label}>
+          <circle cx={x} cy="458" r="4" fill={color}/>
+          <text x={x + 10} y="463" fill="#6b7280" fontSize="11">{label}</text>
+        </g>
+      ))}
+    </svg>
   );
 }
-
-const archS = {
-  row: {
-    display: "flex",
-    gap: 12,
-    justifyContent: "center",
-    width: "100%",
-    marginBottom: 0,
-  },
-  userBox: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 4,
-    padding: "10px 20px",
-    border: "1px solid",
-    borderRadius: 10,
-    background: "rgba(255,255,255,0.03)",
-    minWidth: 80,
-  },
-  layerBox: {
-    width: "100%",
-    border: "1px solid",
-    borderRadius: 12,
-    padding: "14px 18px",
-  },
-  layerTitle: {
-    fontWeight: 700,
-    fontSize: 13,
-    letterSpacing: "0.03em",
-  },
-  chips: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 6,
-    marginTop: 10,
-  },
-  chip: {
-    padding: "3px 10px",
-    borderRadius: 20,
-    fontSize: 12,
-  },
-  branchLine: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    padding: "6px 0",
-  },
-  branchArrow: {
-    fontSize: 10,
-    color: "#4b5563",
-    background: "#09090f",
-    padding: "2px 8px",
-    border: "1px solid rgba(255,255,255,0.07)",
-    borderRadius: 10,
-    whiteSpace: "nowrap",
-  },
-  contractRow: {
-    display: "flex",
-    flexDirection: "column",
-    padding: "5px 8px",
-    background: "rgba(239,68,68,0.06)",
-    borderRadius: 6,
-    border: "1px solid rgba(239,68,68,0.12)",
-  },
-};
 
 const s = {
   page: {

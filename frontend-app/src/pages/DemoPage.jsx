@@ -5,6 +5,7 @@ import {
   TAGS, TAG_DETAILS, MILESTONE_STATUS, getProvider, detectWalletName,
 } from "../utils/contracts";
 import { isGraphAvailable, fetchMyActivityFromGraph } from "../utils/graphQueries";
+import { fetchNotifications, getLastSeenBlock, getReadIds, markOneRead, markAllReadById, formatNotifTime } from "../utils/notifications";
 import { multicallRead } from "../utils/multicall";
 
 const RPC_URL = import.meta.env.VITE_RPC_URL || "http://127.0.0.1:8545";
@@ -297,6 +298,30 @@ export default function DemoPage({ onBack }) {
   const [myDonorBalance, setMyDonorBalance] = useState("0");
   const [milestoneVerifiedAt, setMilestoneVerifiedAt] = useState({}); // milestoneId -> timestamp
   const [releaseLoading, setReleaseLoading] = useState("");
+
+  // 站内信通知
+  const [notifications, setNotifications] = useState([]);
+  const [notifUnread, setNotifUnread] = useState(0);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifCurrentBlock, setNotifCurrentBlock] = useState(0);
+  const notifTimerRef = useRef(null);
+  const notifRef = useRef(null);       // 铃铛按钮容器
+  const notifPanelRef = useRef(null);  // 通知面板
+
+  // 点击面板外部自动收起
+  useEffect(() => {
+    if (!notifOpen) return;
+    const handler = (e) => {
+      if (
+        notifRef.current && !notifRef.current.contains(e.target) &&
+        notifPanelRef.current && !notifPanelRef.current.contains(e.target)
+      ) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [notifOpen]);
   const [challengeBond, setChallengeBond] = useState("1"); // 举报保证金（从合约读取）
 
   const showToast = (msg, type = "error") => {
@@ -328,7 +353,8 @@ export default function DemoPage({ onBack }) {
               const list = await fetchAllProjects(s);
               setAllProjects(list);
               if (list.length > 0) await loadProject(list[list.length - 1].address, s);
-              fetchMySBTs(addr, new e.Contract(REGISTRY_ADDRESS, REGISTRY_ABI, s));
+              const t = await fetchMySBTs(addr, new e.Contract(REGISTRY_ADDRESS, REGISTRY_ABI, s));
+              loadNotifications(t);
             } catch {}
           })();
         }
@@ -382,7 +408,11 @@ export default function DemoPage({ onBack }) {
       }
       fetchMyActivity(addr, list);
       listenMilestoneEvents(list);
-      fetchMySBTs(addr, new ethers.Contract(REGISTRY_ADDRESS, REGISTRY_ABI, s));
+      const tokens = await fetchMySBTs(addr, new ethers.Contract(REGISTRY_ADDRESS, REGISTRY_ABI, s));
+      loadNotifications(tokens);
+      // 每 60 秒轮询，始终通过 ref 读最新 state
+      if (notifTimerRef.current) clearInterval(notifTimerRef.current);
+      notifTimerRef.current = setInterval(() => loadNotifications(null), 60000);
     } catch (e) {
       showToast(e.message);
     }
@@ -486,17 +516,54 @@ export default function DemoPage({ onBack }) {
       console.log("[SBT] tokenIds for", userAddr, ":", tokenIds.map(t => t.toString()));
       const tokens = await Promise.all(tokenIds.map(id => sbt.records(id).then(r => ({
         tokenId: id.toString(),
+        projectAddr: r.project,
         projectName: r.projectName,
         amount: ethers.formatEther(r.amount),
         tag: Number(r.tag),
         donatedAt: Number(r.donatedAt),
       }))));
       console.log("[SBT] tokens:", tokens);
-      setMySBTs(tokens.reverse());
+      const reversed = tokens.slice().reverse();
+      setMySBTs(reversed);
+      return reversed;
     } catch (e) {
       console.error("[SBT] fetchMySBTs failed:", e.message);
+      return [];
     }
   };
+
+  // stateRef：让轮询函数始终读到最新 state，避免 stale closure
+  const notifStateRef = useRef({});
+  notifStateRef.current = { mySBTs, projectAddress, projectName, account };
+
+  // 站内信：扫描参与项目的链上事件
+  // sbtTokens 可传 fresh tokens（避免依赖尚未刷新的 state）
+  const loadNotifications = useCallback(async (freshTokens) => {
+    const { mySBTs: sbts, projectAddress: pa, projectName: pn, account: acc } = notifStateRef.current;
+    if (!acc) return;
+    try {
+      const projectMap = {};
+      // 优先用传入的 fresh tokens，否则读最新 state
+      (freshTokens || sbts).forEach(t => {
+        if (t.projectAddr && t.projectAddr !== ethers.ZeroAddress) {
+          projectMap[t.projectAddr.toLowerCase()] = t.projectName;
+        }
+      });
+      // 当前选中项目也加进去（无论有没有捐款记录）
+      if (pa && pn) projectMap[pa.toLowerCase()] = pn;
+
+      if (!Object.keys(projectMap).length) return;
+
+      const lastSeen = getLastSeenBlock(acc);
+      const readIds = getReadIds(acc);
+      const { all, unread, currentBlock } = await fetchNotifications(READ_PROVIDER, projectMap, lastSeen, readIds);
+      setNotifications(all);
+      setNotifUnread(unread.length);
+      setNotifCurrentBlock(currentBlock);
+    } catch (e) {
+      console.warn("[Notif] load failed:", e.message);
+    }
+  }, []); // 无 deps —— 始终通过 ref 读最新值
 
   // 演示用：跳过180天无活动限制
   const mockEmergencyTime = async () => {
@@ -753,6 +820,8 @@ export default function DemoPage({ onBack }) {
     setAccount(""); setSigner(null); setIsValidator(false);
     setStep1Done(false); setMyProofs({});
     setValidatorStaked(false); setValidatorStakeAmt("0");
+    setNotifications([]); setNotifUnread(0);
+    if (notifTimerRef.current) { clearInterval(notifTimerRef.current); notifTimerRef.current = null; }
     addLog("已断开钱包连接");
     loadProjectsReadOnly();
   };
@@ -912,8 +981,9 @@ export default function DemoPage({ onBack }) {
       addLog(`✅ 感谢您的爱心！${donateAmount} AVAX 已锁入合约，专项用于${TAG_DETAILS[donateTag].desc}`);
       await refreshStatus(new ethers.Contract(projectAddress, PROJECT_ABI, signer));
       fetchMyActivity(account, allProjects);
-      fetchMySBTs(account, new ethers.Contract(REGISTRY_ADDRESS, REGISTRY_ABI, signer));
+      const freshTokens = await fetchMySBTs(account, new ethers.Contract(REGISTRY_ADDRESS, REGISTRY_ABI, signer));
       fetchEmergencyStatus(new ethers.Contract(projectAddress, PROJECT_ABI, READ_PROVIDER), account);
+      loadNotifications(freshTokens);
     } catch (e) {
       if ((e.code === 4001 || (e.message || "").includes("ACTION_REJECTED"))) return setLoading("");
       showToast(e.message.includes("Exceeds target") ? "捐款金额超出剩余目标，请减少金额" : e.message);
@@ -1112,6 +1182,21 @@ export default function DemoPage({ onBack }) {
         <div style={s.topTitle}>GirlsVault · 链上演示</div>
         {account && (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {/* 站内信铃铛 */}
+            <div ref={notifRef} style={{ position: "relative" }}>
+              <button
+                style={{ ...s.switchBtn, background: notifOpen ? "#1e3a5f" : "#111827", color: "#93c5fd", minWidth: 40, padding: "6px 10px", fontSize: 16 }}
+                onClick={() => setNotifOpen(v => !v)}
+                title="站内通知"
+              >
+                🔔
+                {notifUnread > 0 && (
+                  <span style={{ position: "absolute", top: -4, right: -4, background: "#ef4444", color: "#fff", borderRadius: "50%", fontSize: 10, fontWeight: 700, width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
+                    {notifUnread > 9 ? "9+" : notifUnread}
+                  </span>
+                )}
+              </button>
+            </div>
             <button style={{ ...s.switchBtn, background: "#1e1b4b", color: "#a5b4fc" }}
               onClick={() => setActivityOpen(true)}>
               📋 我的参与 {myActivity.length > 0 ? `(${myActivity.length})` : ""}
@@ -1121,6 +1206,90 @@ export default function DemoPage({ onBack }) {
           </div>
         )}
       </div>
+
+      {/* 站内信通知面板 */}
+      {notifOpen && account && (
+        <div ref={notifPanelRef} style={{ position: "fixed", top: 52, right: 16, width: 360, maxHeight: 480, background: "#0f172a", border: "1px solid #1e3a5f", borderRadius: 14, zIndex: 500, overflow: "hidden", boxShadow: "0 8px 40px rgba(0,0,0,0.6)", display: "flex", flexDirection: "column" }}>
+          {/* 面板头 */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px 10px", borderBottom: "1px solid #1e293b" }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: "#e2e8f0" }}>
+              🔔 站内通知
+              {notifUnread > 0 && <span style={{ marginLeft: 8, background: "#ef4444", color: "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 11 }}>{notifUnread} 条未读</span>}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {notifUnread > 0 && (
+                <button
+                  style={{ fontSize: 11, color: "#60a5fa", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  onClick={() => { markAllReadById(account, notifications.map(n => n.id), notifCurrentBlock); setNotifUnread(0); }}
+                >
+                  全部已读
+                </button>
+              )}
+              <button onClick={() => setNotifOpen(false)} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 18, cursor: "pointer", lineHeight: 1 }}>✕</button>
+            </div>
+          </div>
+
+          {/* 通知列表 */}
+          <div style={{ overflowY: "auto", flex: 1 }}>
+            {notifications.length === 0 ? (
+              <div style={{ padding: "32px 16px", textAlign: "center", color: "#4b5563", fontSize: 13 }}>
+                暂无通知<br />
+                <span style={{ fontSize: 11, color: "#374151" }}>捐款后将自动监听你参与项目的动态</span>
+              </div>
+            ) : notifications.map((n) => {
+              const isUnread = notifUnread > 0 && notifications.slice(0, notifUnread).some(u => u.id === n.id);
+              const levelColor = { success: "#34d399", warn: "#fbbf24", error: "#f87171", info: "#60a5fa" }[n.level] || "#94a3b8";
+              const handleClick = async () => {
+                // 标记单条已读
+                markOneRead(account, n.id);
+                setNotifUnread(v => Math.max(0, v - (isUnread ? 1 : 0)));
+                setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, _read: true } : x));
+                // 跳转到对应项目
+                if (n.projectAddr) {
+                  setNotifOpen(false);
+                  await loadProject(n.projectAddr, signer || READ_PROVIDER);
+                }
+              };
+              return (
+                <div
+                  key={n.id}
+                  onClick={handleClick}
+                  style={{
+                    display: "flex", gap: 12, padding: "12px 16px",
+                    borderBottom: "1px solid #1e293b",
+                    background: isUnread && !n._read ? "rgba(59,130,246,0.06)" : "transparent",
+                    alignItems: "flex-start",
+                    cursor: n.projectAddr ? "pointer" : "default",
+                    transition: "background 0.15s",
+                  }}
+                  onMouseEnter={e => { if (n.projectAddr) e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = isUnread && !n._read ? "rgba(59,130,246,0.06)" : "transparent"; }}
+                >
+                  <div style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>{n.icon}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: levelColor, marginBottom: 3 }}>{n.projectName}</div>
+                    <div style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.5 }}>{n.msg}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 5 }}>
+                      <span style={{ fontSize: 11, color: "#4b5563" }}>{formatNotifTime(n.timestamp)}</span>
+                      <a
+                        href={`https://testnet.snowtrace.io/tx/${n.txHash}`}
+                        target="_blank" rel="noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        style={{ fontSize: 11, color: "#374151", textDecoration: "none" }}
+                      >
+                        Tx ↗
+                      </a>
+                    </div>
+                  </div>
+                  {isUnread && !n._read && (
+                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#3b82f6", flexShrink: 0, marginTop: 5 }} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ===== 未登录：欢迎页 ===== */}
       {!account && (
